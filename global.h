@@ -14,6 +14,10 @@ extern uint32_t mySeqNo;
 extern uint32_t lastBroadcastID;
 extern uint16_t lastMsgID;
 
+extern uint32_t prevSeqNo;
+extern uint32_t prevBroadcastID;
+extern uint32_t prevMsgID;
+
 extern uint16_t lastAckID;
 extern uint32_t lastAckSource;
 
@@ -24,17 +28,21 @@ extern unsigned long currentT;
 extern bool interface_navigation_disabler;
 extern bool interface_UI_disabler;
 
+extern int messageCount[5];
 // GPS VARS //
 extern float gpsLatitude;
 extern float gpsLongitude;
 extern float gpsAltitude;
 extern uint8_t gpsSatellites;
-extern double gpsSpeed;
-extern double gpsCourse;
-extern double gpsHDOP;
 extern uint8_t gpsHour;
 extern uint8_t gpsMinute;
 extern uint8_t gpsSecond;
+
+extern double gpsSpeed;
+
+extern double gpsCourse;
+extern double gpsHDOP;
+
 
 extern char gps_value_buffer[8][15];
 
@@ -48,16 +56,27 @@ extern int8_t power;
 extern uint16_t preamble;
 
 // RADIO LIB
-extern volatile bool packetFlag;
+extern volatile bool rxDoneFlag;
+extern volatile bool txDoneFlag;
+extern volatile bool txActive;
 
+
+extern unsigned long txStartTime;
 //SD CARD
 extern bool SD_CARD_READY;
-
+extern bool GPS_Validity;
 //battery 
-
+extern int bat_percent;
 extern float voltage_bat;
+extern bool isCharging;
+extern bool isLowBattery;
+extern bool lowBlinkState;
+// list ng node / address
+extern char item_buffer[4][10];
+extern int choose_ID;
 
-extern char item_buffer[5][10];
+// emergency setup
+
 
 
 

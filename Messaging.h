@@ -102,7 +102,8 @@ public:
   void saveMessageToSD(const char* msg, uint32_t destAddr);
   void loadMessagesFromSD(uint32_t destAddr);
     // loading animation lang
-  void draw_animation(const unsigned char** frames,const int frame_Num);
+  void draw_animation(const unsigned char** frames,const int frame_Num, const char* text);
+  void centerText(const char* text, int y, int width, int startX);
 };
 
 

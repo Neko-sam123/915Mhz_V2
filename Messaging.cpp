@@ -11,8 +11,9 @@ void Message::select_addr(uint32_t destAddr){
     node.sendRREQ(destAddr);
     while(millis() - RREQinterval < 3000 && node.route_established == false){                      //// may loop d2
 			currentT = millis();
-			draw_animation(loadingallArray,loadingallArray_LEN);
+			draw_animation(loadingallArray,loadingallArray_LEN, "Sending RREQ");
       node.receivePacket();
+			node.updateRadio();
       node.update_Expiry_time();
     }
   }
@@ -49,27 +50,31 @@ void Message::handleKeyboard() {
       node.sendDataMessage(currentInput,destAddr);
         unsigned long sendingT = millis();
 
-        while(!node.message_sent && (millis() - sendingT < 10000)){ //// loop to
+        while(!node.message_sent && (millis() - sendingT < 5000)){ //// loop to
           currentT = millis();
           node.receivePacket();
           node.update_Expiry_time();
-          draw_animation(loadingallArray,loadingallArray_LEN);
+					node.updateRadio();
+          draw_animation(loadingallArray,loadingallArray_LEN, "Sending Message");
           //loading effect
         }
 
-        if(node.message_sent == true){
-        String msg = String("> You: ") + currentInput;
-        addMessage(msg.c_str());
-        saveMessageToSD(msg.c_str(), destAddr);      
-        }else{
-          Serial.println("ACK timeout. Message not confirmed sent.");
-        }
+			if (node.message_sent == true) {
+					// Message sent successfully
+					String msg = String("> You: ") + currentInput;
+					addMessage(msg.c_str());
+					saveMessageToSD(msg.c_str(), destAddr);      
 
-      //effect sa error 
-      
-      inputLength = 0;
-      currentInput[0] = '\0';
-      node.message_sent = false;
+					// Clear input only on success
+					inputLength = 0;
+					currentInput[0] = '\0';
+			} else {
+					// Message failed — keep input text so user can retry
+					Serial.println("ACK timeout. Message not confirmed sent.");
+			}
+
+			// Reset flag
+			node.message_sent = false;
 
     } else if ((c == 8 || c == 127) && inputLength > 0) {
       inputLength--;
@@ -85,7 +90,11 @@ void Message::handleKeyboard() {
       //node.saveRoutingTable();
       interface_UI_disabler = false;
       node.route_established = false; 
-			node.saveNodeStateToSD();
+			node.saveNodeStateToNVS();
+			
+			// clear input when esc is pressed
+			inputLength = 0;
+			currentInput[0] = '\0';
       return;
     }
     drawChat();
@@ -134,7 +143,7 @@ void Message::drawChat() {
   display.print("To: 0x");
   display.print(destAddr, HEX);  // d2 lalagay kung saan node
 
-  if(node.route_established == true){
+  if(node.findRoute(destAddr ,true) != -1){
   display.setCursor(98, 7);
   display.print("Active"); // kung active yung node or hindi
   }else{
@@ -235,15 +244,15 @@ void Message::loadMessagesFromSD(uint32_t destAddr) {
 
 
 
-void Message::draw_animation(const unsigned char** frames,const int frame_Num){
+void Message::draw_animation(const unsigned char** frames,const int frame_Num, const char* text){
   static  unsigned long draw_messageT = 0;
   static int index = 0;
 
 	if (index < frame_Num && currentT - draw_messageT > 35){
-		display.fillRect(32, 10, 64, 54, SSD1306_BLACK);
+		display.fillRect(0, 0, 128, 64, SSD1306_BLACK);
 		display.drawBitmap(32, 0, frames[index], 64, 64, 1);
-    display.setCursor(49,42);
-    display.println("Loading");
+		display.drawRect(0, 0, 128, 64, SSD1306_WHITE);
+		centerText(text,42,64,32);
 		display.display();
 		index++;
     if(index >= frame_Num){
@@ -253,6 +262,20 @@ void Message::draw_animation(const unsigned char** frames,const int frame_Num){
 	}
 	
 }
+
+
+void Message::centerText(const char* text, int y, int width, int startX) {
+    int16_t x1, y1;
+    uint16_t w, h;
+    display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h); // get width of text
+
+    int x = startX + (width - w) / 2;  // center text inside box
+
+    display.setCursor(x, y);
+    display.println(text);
+}
+
+
 
 
 

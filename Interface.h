@@ -4,12 +4,14 @@
 #include <Arduino.h>
 #include "global.h"
 #include "Messaging.h"
+#include "SnakeGame.h"
 
 #include <Arduino.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Fonts/TomThumb.h>
+#include <math.h> 
 
 extern Adafruit_SSD1306 display; // extern is used in .h file
 
@@ -94,6 +96,62 @@ extern Adafruit_SSD1306 display; // extern is used in .h file
 //////////////////////////////////// Memory    Card    ///////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////// GPS       ICON    ///////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    extern const unsigned char epd_bitmap_GPS_ICON[];
+
+    extern const int GPS_ICON_LEN;
+    extern const unsigned char* epd_bitmap_allArray[];
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////// GPS       ICON    ///////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////// GPS    Loading    ///////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    extern const unsigned char GPS_loadingframe_00_delay_0[];
+    extern const unsigned char GPS_loadingframe_01_delay_0[];
+    extern const unsigned char GPS_loadingframe_02_delay_0[];
+    extern const unsigned char GPS_loadingframe_03_delay_0[];
+    extern const unsigned char GPS_loadingframe_04_delay_0[];
+    extern const unsigned char GPS_loadingframe_05_delay_0[];
+    extern const unsigned char GPS_loadingframe_06_delay_0[];
+    extern const unsigned char GPS_loadingframe_07_delay_0[];
+    extern const unsigned char GPS_loadingframe_08_delay_0[];
+    extern const unsigned char GPS_loadingframe_09_delay_0[];
+    extern const unsigned char GPS_loadingframe_10_delay_0[];
+    extern const unsigned char GPS_loadingframe_11_delay_0[];
+    extern const unsigned char GPS_loadingframe_12_delay_0[];
+    extern const unsigned char GPS_loadingframe_13_delay_0[];
+    extern const unsigned char GPS_loadingframe_14_delay_0[];
+    extern const unsigned char GPS_loadingframe_15_delay_0[];
+    extern const unsigned char GPS_loadingframe_16_delay_0[];
+    extern const unsigned char GPS_loadingframe_17_delay_0[];
+    extern const unsigned char GPS_loadingframe_18_delay_0[];
+    extern const unsigned char GPS_loadingframe_19_delay_0[];
+    extern const unsigned char GPS_loadingframe_20_delay_0[];
+    extern const unsigned char GPS_loadingframe_21_delay_0[];
+    extern const unsigned char GPS_loadingframe_22_delay_0[];
+    extern const unsigned char GPS_loadingframe_23_delay_0[];
+    extern const unsigned char GPS_loadingframe_24_delay_0[];
+    extern const unsigned char GPS_loadingframe_25_delay_0[];
+    extern const unsigned char GPS_loadingframe_26_delay_0[];
+    extern const unsigned char GPS_loadingframe_27_delay_0[];
+    extern const unsigned char GPS_loadingframe_28_delay_0[];
+    extern const unsigned char GPS_loadingframe_29_delay_0[];
+
+    extern const int GPS_loadingallArray_LEN;
+    extern const unsigned char* GPS_loadingallArray[];
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////// GPS    Loading    ///////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 //////////////////////////////arrows.//////////////////////////////
     extern const uint8_t arrowUp_6x4[];
     extern const uint8_t arrowDown_6x4[];
@@ -106,7 +164,7 @@ class UInterface
   Message message;
   Node node;
   AODV_VAR aodv;
-
+  SnakeGame snake;
 
   bool message_clear = false; // refresh if out
   bool gps_clear = false;
@@ -124,6 +182,14 @@ class UInterface
   int selection_value = 0;
   bool selection_disabler = false;
 
+  // GPS Select
+  bool GPS_disabler = true;
+  int GPS_node_select = sizeof(item_buffer) / sizeof(item_buffer[0]);
+  #define EARTH_RADIUS 6371000.0
+  //float PI = 3.14159265;
+  bool GPS_node_array_bool[sizeof(item_buffer) / sizeof(item_buffer[0])] = {0};
+  unsigned long GPS_loading_arrayT[sizeof(item_buffer) / sizeof(item_buffer[0])] = {0};
+  
 ////////////////// message ////////////////////////////
 
   int text_cursor_height_array[5] =
@@ -138,30 +204,6 @@ class UInterface
 
 //////////////////   GPS   ////////////////////////////
 
-  char gps_value_labels[8][8] = 
-    {
-      "Long :", 
-      "Lat  :", 
-      "Alt  :", 
-      "Sat# :", 
-      "Spd  :", 
-      "Crs  :", 
-      "HDOP :", 
-      "Time :"
-    };
-
-
-  int gps_text_cursor_height_array[8] =
-    {
-      8,
-      16,
-      24,
-      32,
-      40,
-      48,
-      56,
-      64
-    };
 
 //////////////////   GPS   ////////////////////////////
   public:
@@ -184,10 +226,42 @@ class UInterface
   
   void arrow_blinking(int x,int y ,int dulo);
 
-  void drawBatteryIcon13px(int x, int y, float voltage);
+  void drawBatteryIcon13px(int x, int y);
+  
+  float computeDistance(float lat1, float lon1, float lat2, float lon2);
+  float deg2rad(float deg);
+
+  float computeBearing(float lat1, float lon1, float lat2, float lon2);
+  void drawCompass(float myLat, float myLon, float targetLat, float targetLon, float heading, bool moving);
 };
 
 
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////// SNAKE    FRAME    ///////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    extern const unsigned char SNAKEframe_00_delay_0[];
+    extern const unsigned char SNAKEframe_01_delay_0[];
+    extern const unsigned char SNAKEframe_02_delay_0[];
+    extern const unsigned char SNAKEframe_03_delay_0[];
+    extern const unsigned char SNAKEframe_04_delay_0[];
+    extern const unsigned char SNAKEframe_05_delay_0[];
+    extern const unsigned char SNAKEframe_06_delay_0[];
+    extern const unsigned char SNAKEframe_07_delay_0[];
+    extern const unsigned char SNAKEframe_08_delay_0[];
+    extern const unsigned char SNAKEframe_09_delay_0[];
+    extern const unsigned char SNAKEframe_10_delay_0[];
+    extern const unsigned char SNAKEframe_11_delay_0[];
+    extern const unsigned char SNAKEframe_12_delay_0[];
+    extern const unsigned char SNAKEframe_13_delay_0[];
+    extern const unsigned char SNAKEframe_14_delay_0[];
+    extern const unsigned char SNAKEframe_15_delay_0[];
+    extern const unsigned char SNAKEframe_16_delay_0[];
 
+    extern const int SNAKEallArray_LEN;
+    extern const unsigned char* SNAKEallArray[];
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////// SNAKE    FRAME    ///////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif
